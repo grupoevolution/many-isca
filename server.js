@@ -573,7 +573,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 </head>
 <body>
 <div class="pg">
-  <div class="badge-row"><div class="badge-inner">Exclusivo · TikTok Shop IA</div></div>
+  <div class="badge-row"><div class="badge-inner">Exclusivo</div></div>
 
   <div class="hl" style="animation:fup .5s .05s ease both;opacity:0">
     <h1>${page.title}</h1>
@@ -748,8 +748,8 @@ video{position:absolute;inset:0;width:100%;height:100%;display:block;outline:non
 @keyframes pulse-play{0%,100%{transform:scale(1);box-shadow:0 4px 30px ${t.bsh}}50%{transform:scale(1.1);box-shadow:0 4px 50px ${t.bsh},0 0 0 16px ${t.a1}18}}
 
 /* BUTTONS */
-.btns{margin-top:28px;display:flex;flex-direction:column;gap:14px;opacity:0;transition:opacity .6s ease;pointer-events:none}
-.btns.visible{opacity:1;pointer-events:all}
+.btns{margin-top:28px;display:none;flex-direction:column;gap:14px;opacity:0;transition:opacity .6s ease}
+.btns.visible{display:flex;opacity:1}
 .btn-main{width:100%;padding:20px 24px;border:none;border-radius:18px;background:${t.btn};color:#fff;font-family:'Anton',sans-serif;font-size:17px;letter-spacing:.5px;cursor:pointer;box-shadow:0 4px 28px ${t.bsh},inset 0 0 0 1px rgba(255,255,255,.1);-webkit-appearance:none;touch-action:manipulation;transition:transform .15s;position:relative;overflow:hidden}
 .btn-main:active{transform:scale(.97)}
 .btn-main::before{content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.15),transparent);animation:shimmer 2.5s ease-in-out infinite}
@@ -775,7 +775,7 @@ video{position:absolute;inset:0;width:100%;height:100%;display:block;outline:non
     </div>
   </div>
 
-  <div class="btns" id="btns" style="animation:fup .4s .15s ease both">
+  <div class="btns" id="btns">
     <button class="btn-main" id="btnCta">🚀 QUERO GANHAR DINHEIRO COM I.A</button>
     <a class="btn-subtle" href="/prompts">Quero só os prompts</a>
   </div>
@@ -811,7 +811,10 @@ video{position:absolute;inset:0;width:100%;height:100%;display:block;outline:non
   function showBtns(){
     if(shown) return;
     shown = true;
-    btns.classList.add('visible');
+    btns.style.display = 'flex';
+    requestAnimationFrame(function(){
+      requestAnimationFrame(function(){ btns.classList.add('visible'); });
+    });
   }
 
   // CTA click tracking + redirect
@@ -894,7 +897,7 @@ a{text-decoration:none;color:inherit}
 .pop-box::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,#7c3aff,#ff3aad)}
 .pop-emoji{font-size:46px;text-align:center;margin-bottom:14px}
 .pop-title{font-family:'Anton',sans-serif;font-size:21px;letter-spacing:.3px;color:#1a1a2e;text-align:center;line-height:1.15;margin-bottom:8px}
-.pop-sub{font-size:14px;color:#555;text-align:center;line-height:1.65;margin-bottom:22px}
+.pop-sub{font-size:16px;color:#555;text-align:center;line-height:1.6;margin-bottom:22px}
 .pop-sub strong{color:#7c3aff}
 .pop-btn{width:100%;padding:18px;border:none;border-radius:15px;background:linear-gradient(135deg,#7c3aff,#ff3aad);color:#fff;font-family:'Anton',sans-serif;font-size:16px;letter-spacing:.5px;cursor:pointer;-webkit-appearance:none;touch-action:manipulation;transition:transform .15s}
 .pop-btn:active{transform:scale(.97)}
@@ -927,7 +930,7 @@ a{text-decoration:none;color:inherit}
   <div class="pop-box">
     <div class="pop-emoji">🔐</div>
     <div class="pop-title">Quer acessar os prompts secretos?</div>
-    <p class="pop-sub">Mais de 120 prompts ultra realistas que profissionais usam para criar fotos de nível de estúdio com IA — de R$197 por apenas <strong>R$19,90</strong> hoje.</p>
+    <p class="pop-sub">Mais de 120 prompts Ultra-Realistas para copiar e colar! de R$97,90 por apenas <strong>R$19,90</strong></p>
     <button class="pop-btn" onclick="window.location.href='${GALLERY_CTA}'">QUERO ACESSAR POR R$19,90</button>
     <span class="pop-close" id="popClose">Não, continuar navegando grátis</span>
   </div>
@@ -941,7 +944,7 @@ a{text-decoration:none;color:inherit}
     setTimeout(function(){
       ov.classList.add('show');
       sessionStorage.setItem('galPopSeen','1');
-    }, 4000);
+    }, 10000);
   }
   document.getElementById('popClose').addEventListener('click',function(){
     ov.classList.remove('show');
