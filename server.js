@@ -62,7 +62,11 @@ const upload = multer({
     },
     filename: (req, file, cb) => cb(null, Date.now() + '-' + file.originalname.replace(/\s/g, '_'))
   }),
-  limits: { fileSize: 20 * 1024 * 1024 }
+  limits: { fileSize: 20 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    const ok = /image\/(jpeg|jpg|png|webp|gif)/.test(file.mimetype);
+    cb(null, ok);
+  }
 });
 
 app.use(express.json());
@@ -455,7 +459,7 @@ function formPage(page) {
         <div class="dropz">
           <input type="file" name="images" multiple accept="image/*" onchange="prevF(this)">
           <p style="font-size:14px;color:var(--mu2)">Toque aqui para adicionar imagens</p>
-          <p style="font-size:12px;color:var(--mu);margin-top:4px">PNG · JPG · WEBP · máx 20MB</p>
+          <p style="font-size:12px;color:var(--mu);margin-top:4px">PNG · JPG · WEBP · GIF · máx 20MB</p>
         </div>
         <div class="prev-wrap" id="pv"></div>
       </div>
@@ -556,6 +560,8 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .btn-unlock:active{transform:scale(.97)}
 .pop-close{display:block;text-align:center;margin-top:14px;font-size:12px;color:#bbb;cursor:pointer;padding:6px;-webkit-tap-highlight-color:transparent}
 .pop-close:hover{color:#999}
+.pop-x{position:absolute;top:14px;right:14px;width:32px;height:32px;border-radius:50%;border:none;background:rgba(0,0,0,.07);color:#aaa;font-size:16px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;transition:.15s}
+.pop-x:hover{background:rgba(0,0,0,.13);color:#666}
 
 /* ─── PARTICLES ─── */
 .pts{position:fixed;inset:0;pointer-events:none;z-index:199;overflow:hidden;opacity:0;transition:opacity .3s}
@@ -586,6 +592,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
   </div>
 
   <div class="cta" style="animation:fup .5s .2s ease both;opacity:0">
+    <p style="text-align:center;font-size:13px;color:${t.mu};margin-bottom:10px">Como usar? Basta colar o prompt no Gemini</p>
     <button class="btn-copy" id="btnCopy">CLIQUE AQUI PARA COPIAR PROMPT</button>
     <div class="copy-ok" id="copyOk">✓ Prompt copiado!</div>
   </div>
@@ -608,7 +615,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
     <div class="pop-title">Parabéns, você ganhou<br>um bônus surpresa!</div>
     <p class="pop-sub">O prompt que prometi já está garantido, mas se deseja destravar o presente misterioso, clique no botão abaixo.</p>
     <button class="btn-unlock" id="btnUnlock">DESBLOQUEAR BÔNUS</button>
-    <span class="pop-close" id="btnClose">Não, obrigado</span>
+    <button class="pop-x" id="btnClose" aria-label="Fechar">✕</button>
   </div>
 </div>
 
