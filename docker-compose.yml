@@ -1,0 +1,13 @@
+version: '3.8'
+services:
+  app:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+      - ADMIN_PIN=8203
+    volumes:
+      - ./db:/app/db
+      - ./uploads:/app/uploads
+    restart: unless-stopped
