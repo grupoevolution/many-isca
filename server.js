@@ -592,7 +592,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
   </div>
 
   <div class="cta" style="animation:fup .5s .2s ease both;opacity:0">
-    <p style="text-align:center;font-size:13px;color:${t.mu};margin-bottom:10px">Como usar? Basta colar o prompt no Gemini</p>
+    <p style="text-align:center;font-size:13px;color:#fff;font-weight:700;margin-bottom:10px">Como usar? Basta colar o prompt no Gemini</p>
     <button class="btn-copy" id="btnCopy">CLIQUE AQUI PARA COPIAR PROMPT</button>
     <div class="copy-ok" id="copyOk">✓ Prompt copiado!</div>
   </div>
