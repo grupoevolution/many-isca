@@ -780,7 +780,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
   </div>
 
   <div class="btns-area" id="btnsArea">
-    <p class="countdown-label">Essa aula gratuita só estará<br>disponível em <span class="countdown-timer" id="cdTimer">3:00</span></p>
+    <p class="countdown-label">Você tem <span class="countdown-timer" id="cdTimer">2:00</span> para garantir<br>o acesso à aula gratuita.</p>
     <button class="btn-main" id="btnCta">🚀 QUERO GANHAR DINHEIRO COM I.A</button>
     <a class="btn-subtle" href="/${page.slug}?np=1">Quero só os prompts</a>
   </div>
@@ -808,7 +808,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 
   // Countdown: 3 minutes = 180s
   function startCountdown(){
-    var total = 180;
+    var total = 120;
     var el = document.getElementById('cdTimer');
     var iv = setInterval(function(){
       total--;
