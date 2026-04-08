@@ -9,7 +9,7 @@ const app  = express();
 const PORT = process.env.PORT || 3000;
 const PIN  = process.env.ADMIN_PIN || '8203';
 const DB_PATH = path.join(__dirname, 'db', 'data.json');
-const VIDEO_URL = 'https://e-volutionn.com/wp-content/uploads/2026/04/WhatsApp-Video-2026-04-03-at-22.21.37.mp4';
+const VIDEO_URL = 'https://ttshopia.com/wp-content/uploads/2026/04/Design-sem-nome.mp4';
 const GALLERY_CTA = process.env.GALLERY_CTA_URL || '#';
 
 let db;
@@ -813,7 +813,7 @@ video{position:absolute;inset:0;width:100%;height:100%;display:block;outline:non
 
   // show buttons after 40s of watch time
   vid.addEventListener('timeupdate', function(){
-    if(!shown && vid.currentTime >= 40){ showBtns(); }
+    if(!shown && vid.currentTime >= 42){ showBtns(); }
   });
   function showBtns(){
     if(shown) return;
