@@ -644,6 +644,11 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
   // ── PAGE ACCESS TRACKING ──
   try{fetch('/api/click/'+SLUG,{method:'POST'});}catch(e){}
 
+  // If coming back from video page, suppress popup permanently for this session
+  if(new URLSearchParams(location.search).get('np')==='1'){
+    sessionStorage.setItem('noPopup','1');
+    history.replaceState(null,'',location.pathname); // clean URL
+  }
   // ── COPY + POPUP ──
   var ov    = document.getElementById('ov');
   var popupShown = false;
@@ -750,9 +755,9 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 /* COUNTDOWN + BUTTONS */
 .btns-area{margin-top:24px;display:none;flex-direction:column;gap:10px;opacity:0;transition:opacity .6s ease}
 .btns-area.visible{display:flex;opacity:1}
-.countdown-label{text-align:center;font-size:14px;font-weight:700;color:${t.tx};line-height:1.5}
-.countdown-timer{display:inline-block;font-family:'Anton',sans-serif;font-size:18px;color:${t.a2};letter-spacing:1px}
-.btn-main{width:100%;padding:20px 24px;border:none;border-radius:18px;background:${t.btn};color:#fff;font-family:'Anton',sans-serif;font-size:17px;letter-spacing:.5px;cursor:pointer;box-shadow:0 4px 28px ${t.bsh},inset 0 0 0 1px rgba(255,255,255,.1);-webkit-appearance:none;touch-action:manipulation;transition:transform .15s;position:relative;overflow:hidden}
+.countdown-label{text-align:center;font-size:14px;font-weight:700;color:${t.tx};line-height:1.6}
+.countdown-timer{color:#cc2222;font-family:'Anton',sans-serif;font-size:18px}
+.btn-main{width:100%;padding:20px 24px;border:none;border-radius:18px;background:${t.btn};color:#fff;font-family:'Anton',sans-serif;font-size:17px;letter-spacing:.5px;cursor:pointer;box-shadow:0 4px 28px ${t.bsh},inset 0 0 0 1px rgba(255,255,255,.1);-webkit-appearance:none;touch-action:manipulation;transition:transform .15s;position:relative;overflow:hidden;white-space:nowrap}
 .btn-main:active{transform:scale(.97)}
 .btn-main::before{content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.15),transparent);animation:shimmer 2.5s ease-in-out infinite}
 .btn-subtle{display:block;text-align:center;font-size:13px;color:${t.mu};cursor:pointer;padding:8px;-webkit-tap-highlight-color:transparent;opacity:.7;text-decoration:none}
@@ -775,9 +780,9 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
   </div>
 
   <div class="btns-area" id="btnsArea">
-    <p class="countdown-label">Essa aula gratuita só estará disponível em<br><span class="countdown-timer" id="cdTimer">3:00</span></p>
+    <p class="countdown-label">Essa aula gratuita só estará<br>disponível em <span class="countdown-timer" id="cdTimer">3:00</span></p>
     <button class="btn-main" id="btnCta">🚀 QUERO GANHAR DINHEIRO COM I.A</button>
-    <a class="btn-subtle" href="/${page.slug}">Quero só os prompts</a>
+    <a class="btn-subtle" href="/${page.slug}?np=1">Quero só os prompts</a>
   </div>
 </div>
 
