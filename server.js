@@ -733,7 +733,7 @@ function videoPage(page) {
 <meta name="theme-color" content="${t.bg}">
 <title>${page.title}</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Anton&family=DM+Sans:opsz,wght@9..40,400;9..40,500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html{overflow-x:hidden}
@@ -744,23 +744,18 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 /* VIDEO TITLE */
 .vid-label{text-align:center;font-family:'Anton',sans-serif;font-size:16px;letter-spacing:2px;color:${t.mu};margin-bottom:14px;text-transform:uppercase}
 
-/* VIDEO WRAPPER — portrait 3:4 */
-.vid-wrap{width:100%;border-radius:18px;overflow:hidden;background:#000;position:relative;border:1px solid ${t.bb};box-shadow:0 8px 50px rgba(0,0,0,.6);aspect-ratio:3/4}
-video{position:absolute;inset:0;width:100%;height:100%;display:block;outline:none;object-fit:cover}
-.play-overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:rgba(0,0,0,.35);cursor:pointer;transition:background .2s}
-.play-overlay.hidden{opacity:0;pointer-events:none}
-.play-circle{width:76px;height:76px;border-radius:50%;background:${t.btn};display:flex;align-items:center;justify-content:center;box-shadow:0 4px 30px ${t.bsh};animation:pulse-play 1.8s ease-in-out infinite;flex-shrink:0}
-.play-circle svg{width:30px;height:30px;fill:#fff;margin-left:5px}
-.play-hint{font-size:13px;color:rgba(255,255,255,.7);letter-spacing:.5px}
-@keyframes pulse-play{0%,100%{transform:scale(1);box-shadow:0 4px 30px ${t.bsh}}50%{transform:scale(1.1);box-shadow:0 4px 50px ${t.bsh},0 0 0 16px ${t.a1}18}}
+/* VTURB WRAPPER */
+.vid-wrap{width:100%;margin-bottom:0}
 
-/* BUTTONS */
-.btns{margin-top:28px;display:none;flex-direction:column;gap:14px;opacity:0;transition:opacity .6s ease}
-.btns.visible{display:flex;opacity:1}
+/* COUNTDOWN + BUTTONS */
+.btns-area{margin-top:24px;display:none;flex-direction:column;gap:10px;opacity:0;transition:opacity .6s ease}
+.btns-area.visible{display:flex;opacity:1}
+.countdown-label{text-align:center;font-size:14px;font-weight:700;color:${t.tx};line-height:1.5}
+.countdown-timer{display:inline-block;font-family:'Anton',sans-serif;font-size:18px;color:${t.a2};letter-spacing:1px}
 .btn-main{width:100%;padding:20px 24px;border:none;border-radius:18px;background:${t.btn};color:#fff;font-family:'Anton',sans-serif;font-size:17px;letter-spacing:.5px;cursor:pointer;box-shadow:0 4px 28px ${t.bsh},inset 0 0 0 1px rgba(255,255,255,.1);-webkit-appearance:none;touch-action:manipulation;transition:transform .15s;position:relative;overflow:hidden}
 .btn-main:active{transform:scale(.97)}
 .btn-main::before{content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.15),transparent);animation:shimmer 2.5s ease-in-out infinite}
-.btn-subtle{display:block;text-align:center;font-size:13px;color:${t.mu};cursor:pointer;padding:8px;-webkit-tap-highlight-color:transparent;opacity:.7}
+.btn-subtle{display:block;text-align:center;font-size:13px;color:${t.mu};cursor:pointer;padding:8px;-webkit-tap-highlight-color:transparent;opacity:.7;text-decoration:none}
 .btn-subtle:hover{opacity:1}
 @keyframes shimmer{0%{left:-100%}100%{left:200%}}
 @keyframes fup{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
@@ -771,57 +766,52 @@ video{position:absolute;inset:0;width:100%;height:100%;display:block;outline:non
   <p class="vid-label" style="animation:fup .4s ease both">ASSISTA O VÍDEO</p>
 
   <div class="vid-wrap" style="animation:fup .4s .08s ease both;opacity:0">
-    <video id="vid" playsinline preload="metadata">
-      <source src="${VIDEO_URL}" type="video/mp4">
-    </video>
-    <div class="play-overlay" id="playOv">
-      <div class="play-circle">
-        <svg viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg>
-      </div>
-      <span class="play-hint">aperte aqui para assistir</span>
-    </div>
+    <vturb-smartplayer id="vid-69d65881ba8431ee2bdc72d2" style="display:block;margin:0 auto;width:100%;max-width:400px;"></vturb-smartplayer>
+    <script type="text/javascript">
+      var s=document.createElement("script");
+      s.src="https://scripts.converteai.net/5d9f8480-70ee-4640-ab7d-afc37958aa16/players/69d65881ba8431ee2bdc72d2/v4/player.js";
+      s.async=true;document.head.appendChild(s);
+    </script>
   </div>
 
-  <div class="btns" id="btns">
+  <div class="btns-area" id="btnsArea">
+    <p class="countdown-label">Essa aula gratuita só estará disponível em<br><span class="countdown-timer" id="cdTimer">3:00</span></p>
     <button class="btn-main" id="btnCta">🚀 QUERO GANHAR DINHEIRO COM I.A</button>
-    <a class="btn-subtle" href="/prompts">Quero só os prompts</a>
+    <a class="btn-subtle" href="/${page.slug}">Quero só os prompts</a>
   </div>
 </div>
 
 <script>
 (function(){
-  var SLUG   = ${JSON.stringify(page.slug)};
-  var CTA    = ${JSON.stringify(page.cta_url || '#')};
-  var vid    = document.getElementById('vid');
-  var playOv = document.getElementById('playOv');
-  var btns   = document.getElementById('btns');
-  var shown  = false;
-  var timer  = null;
+  var SLUG = ${JSON.stringify(page.slug)};
+  var CTA  = ${JSON.stringify(page.cta_url || '#')};
+  var area = document.getElementById('btnsArea');
+  var shown = false;
 
-  // play / pause via overlay
-  playOv.addEventListener('click', function(){
-    vid.play();
-    playOv.classList.add('hidden');
-  });
-  vid.addEventListener('pause', function(){
-    if(!vid.ended) playOv.classList.remove('hidden');
-  });
-  vid.addEventListener('ended', function(){
-    playOv.classList.remove('hidden');
-    showBtns();
-  });
-
-  // show buttons after 40s of watch time
-  vid.addEventListener('timeupdate', function(){
-    if(!shown && vid.currentTime >= 42){ showBtns(); }
-  });
   function showBtns(){
     if(shown) return;
     shown = true;
-    btns.style.display = 'flex';
+    area.style.display = 'flex';
     requestAnimationFrame(function(){
-      requestAnimationFrame(function(){ btns.classList.add('visible'); });
+      requestAnimationFrame(function(){ area.classList.add('visible'); });
     });
+    startCountdown();
+  }
+
+  // Show buttons after 23 seconds (real clock — works regardless of player)
+  setTimeout(showBtns, 23000);
+
+  // Countdown: 3 minutes = 180s
+  function startCountdown(){
+    var total = 180;
+    var el = document.getElementById('cdTimer');
+    var iv = setInterval(function(){
+      total--;
+      if(total <= 0){ clearInterval(iv); el.textContent='0:00'; return; }
+      var m = Math.floor(total/60);
+      var s = total%60;
+      el.textContent = m+':'+(s<10?'0':'')+s;
+    }, 1000);
   }
 
   // CTA click tracking + redirect
