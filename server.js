@@ -131,7 +131,7 @@ app.post('/admin/pages/:id/update', auth, upload.array('images', 10), (req, res)
   const { title, prompt, cta_url, template, subtitle, keep_images } = req.body;
   const p = qOne('SELECT * FROM pages WHERE id=?', [req.params.id]);
   if (!p) return res.redirect('/admin');
-  const kept = keep_images === 'on' ? JSON.parse(p.images) : [];
+  const kept = JSON.parse(p.images || '[]'); // always keep — individual deletion handled separately
   const imgs = [...kept, ...(req.files || []).map(f => '/uploads/' + f.filename)];
   db.run('UPDATE pages SET title=?,prompt=?,cta_url=?,subtitle=?,images=?,template=? WHERE id=?',
     [title, prompt, cta_url || '', subtitle || '', JSON.stringify(imgs), template || 'dark', req.params.id]);
@@ -140,7 +140,22 @@ app.post('/admin/pages/:id/update', auth, upload.array('images', 10), (req, res)
 app.post('/admin/pages/:id/delete', auth, (req, res) => {
   db.run('DELETE FROM pages WHERE id=?', [req.params.id]); saveDB(); res.redirect('/admin');
 });
-app.post('/admin/pages/:id/duplicate', auth, (req, res) => {
+app.post('/admin/pages/:id/delete-image', auth, (req, res) => {
+  const { img } = req.body;
+  const p = qOne('SELECT * FROM pages WHERE id=?', [req.params.id]);
+  if (!p) return res.redirect('/admin');
+  const imgs = JSON.parse(p.images || '[]').filter(i => i !== img);
+  db.run('UPDATE pages SET images=? WHERE id=?', [JSON.stringify(imgs), req.params.id]);
+  // delete file from disk
+  try {
+    const filePath = path.join(__dirname, img);
+    if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+  } catch(e) {}
+  saveDB();
+  res.redirect('/admin/pages/' + req.params.id + '/edit');
+});
+
+
   const p = qOne('SELECT * FROM pages WHERE id=?', [req.params.id]);
   if (!p) return res.redirect('/admin');
   const slugify = require('slugify');
@@ -503,12 +518,18 @@ function formPage(page) {
       <div class="fs">
         <div class="fs-title">Imagens (1 = fixa · 2+ = carrossel)</div>
         ${isEdit && imgs.length ? `
-          <div style="margin-bottom:12px">
-            <p style="font-size:12px;color:var(--mu2);margin-bottom:8px">Imagens atuais:</p>
-            <div class="prev-wrap">${imgs.map(i => `<img src="${i}" class="prev-img">`).join('')}</div>
-            <label style="display:flex;align-items:center;gap:8px;margin-top:10px;cursor:pointer;font-size:13px;text-transform:none;letter-spacing:0;color:var(--mu2);width:auto">
-              <input type="checkbox" name="keep_images" checked style="width:auto;padding:0;accent-color:var(--ac)"> Manter imagens atuais
-            </label>
+          <div style="margin-bottom:14px">
+            <p style="font-size:12px;color:var(--mu2);margin-bottom:10px">Imagens atuais — toque no ✕ para remover:</p>
+            <div class="prev-wrap">
+              ${imgs.map(img => `
+                <div style="position:relative;display:inline-block">
+                  <img src="${img}" class="prev-img">
+                  <form method="POST" action="/admin/pages/${page.id}/delete-image" style="display:inline" onsubmit="return confirm('Remover essa imagem?')">
+                    <input type="hidden" name="img" value="${img}">
+                    <button type="submit" style="position:absolute;top:-6px;right:-6px;width:20px;height:20px;border-radius:50%;border:none;background:var(--err);color:#fff;font-size:11px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;box-shadow:0 2px 6px rgba(0,0,0,.4)">✕</button>
+                  </form>
+                </div>`).join('')}
+            </div>
           </div>` : ''}
         <div class="dropz">
           <input type="file" name="images" multiple accept="image/*" onchange="prevF(this)">
@@ -525,8 +546,32 @@ function formPage(page) {
   </div></div>
   <script>
     function selT(el){document.querySelectorAll('.tpl-opt').forEach(function(e){e.classList.remove('sel')});el.classList.add('sel')}
-    function prevF(input){var g=document.getElementById('pv');g.innerHTML='';Array.from(input.files).forEach(function(f){var i=document.createElement('img');i.className='prev-img';i.src=URL.createObjectURL(f);g.appendChild(i)})}
-  </script>
+    function prevF(input){
+      var g=document.getElementById('pv');
+      g.innerHTML='';
+      Array.from(input.files).forEach(function(f,idx){
+        var wrap=document.createElement('div');
+        wrap.style.cssText='position:relative;display:inline-block';
+        var i=document.createElement('img');
+        i.className='prev-img';
+        i.src=URL.createObjectURL(f);
+        var x=document.createElement('button');
+        x.type='button';
+        x.textContent='✕';
+        x.style.cssText='position:absolute;top:-6px;right:-6px;width:20px;height:20px;border-radius:50%;border:none;background:#f43f5e;color:#fff;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;box-shadow:0 2px 6px rgba(0,0,0,.4)';
+        x.onclick=function(){
+          wrap.remove();
+          // rebuild FileList via DataTransfer
+          var dt=new DataTransfer();
+          var files=Array.from(input.files).filter(function(_,i){return i!==idx});
+          files.forEach(function(file){dt.items.add(file)});
+          input.files=dt.files;
+        };
+        wrap.appendChild(i);
+        wrap.appendChild(x);
+        g.appendChild(wrap);
+      });
+    }</script>
   </body></html>`;
 }
 
