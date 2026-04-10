@@ -156,10 +156,8 @@ app.post('/admin/pages/:id/delete-image', auth, (req, res) => {
 });
 
 
+app.post('/admin/pages/:id/duplicate', auth, (req, res) => {
   const p = qOne('SELECT * FROM pages WHERE id=?', [req.params.id]);
-  if (!p) return res.redirect('/admin');
-  const slugify = require('slugify');
-  let slug = slugify(p.title + '-copia', { lower: true, strict: true });
   if (qOne('SELECT id FROM pages WHERE slug=?', [slug])) slug += '-' + Date.now();
   db.run('INSERT INTO pages (title,slug,prompt,cta_url,subtitle,images,template) VALUES (?,?,?,?,?,?,?)',
     [p.title + ' (cópia)', slug, p.prompt, p.cta_url, p.subtitle, p.images, p.template]);
