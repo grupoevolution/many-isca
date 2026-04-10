@@ -10,7 +10,6 @@ const PORT = process.env.PORT || 3000;
 const PIN  = process.env.ADMIN_PIN || '8203';
 const DB_PATH = path.join(__dirname, 'db', 'data.json');
 const VIDEO_URL = 'https://ttshopia.com/wp-content/uploads/2026/04/Design-sem-nome.mp4';
-const GALLERY_CTA = process.env.GALLERY_CTA_URL || '#';
 
 let db;
 async function initDB() {
@@ -42,8 +41,20 @@ async function initDB() {
   ].forEach(col => { try { db.run(`ALTER TABLE pages ADD COLUMN ${col}`); } catch(e){} });
   // migrate old vsl_url → cta_url
   try { db.run(`UPDATE pages SET cta_url=vsl_url WHERE (cta_url IS NULL OR cta_url='') AND vsl_url IS NOT NULL AND vsl_url!=''`); } catch(e){}
+  db.run(`CREATE TABLE IF NOT EXISTS settings (
+    key  TEXT PRIMARY KEY,
+    val  TEXT NOT NULL DEFAULT ''
+  )`);
+  // seed defaults
+  if (!qOne("SELECT key FROM settings WHERE key='offer_active'"))
+    db.run("INSERT INTO settings (key,val) VALUES ('offer_active','1')");
+  if (!qOne("SELECT key FROM settings WHERE key='offer_cta_url'"))
+    db.run("INSERT INTO settings (key,val) VALUES ('offer_cta_url','')");
   saveDB();
 }
+
+function getSetting(key) { const r = qOne('SELECT val FROM settings WHERE key=?',[key]); return r ? r.val : ''; }
+function setSetting(key,val) { db.run('INSERT OR REPLACE INTO settings (key,val) VALUES (?,?)',[key,val]); saveDB(); }
 
 function saveDB() { fs.writeFileSync(DB_PATH, Buffer.from(db.export())); }
 function qAll(sql, p=[]) {
@@ -84,10 +95,19 @@ app.post('/admin/login', (req, res) => {
 });
 app.get('/admin/logout', (req, res) => { req.session.destroy(); res.redirect('/admin/login'); });
 
+// ── SETTINGS ──────────────────────────────────────────────────────────────────
+app.post('/admin/settings', auth, (req, res) => {
+  const { offer_active, offer_cta_url } = req.body;
+  setSetting('offer_active', offer_active === '1' ? '1' : '0');
+  setSetting('offer_cta_url', offer_cta_url || '');
+  res.redirect('/admin');
+});
+
 // ── ADMIN DASHBOARD ───────────────────────────────────────────────────────────
 app.get('/admin', auth, (req, res) => {
   const pages = qAll(`SELECT * FROM pages ORDER BY created_at DESC`);
-  res.send(dashPage(pages));
+  const settings = { offer_active: getSetting('offer_active'), offer_cta_url: getSetting('offer_cta_url') };
+  res.send(dashPage(pages, settings));
 });
 
 // ── PAGES CRUD ────────────────────────────────────────────────────────────────
@@ -145,7 +165,8 @@ app.post('/api/cta/:slug', (req, res) => {
 app.get('/', (req, res) => res.redirect('/prompts'));
 app.get('/prompts', (req, res) => {
   const pages = qAll(`SELECT * FROM pages ORDER BY created_at DESC`);
-  res.send(galleryPage(pages));
+  const settings = { offer_active: getSetting('offer_active'), offer_cta_url: getSetting('offer_cta_url') };
+  res.send(galleryPage(pages, settings));
 });
 app.get('/video/:slug', (req, res) => {
   const p = qOne('SELECT * FROM pages WHERE slug=?', [req.params.slug]);
@@ -336,12 +357,45 @@ const TPL_META = {
   brasil: { label: 'Brasil',      colors: ['#009c3b', '#ffdf00', '#002776'] },
 };
 
-function dashPage(pages) {
+function dashPage(pages, settings) {
   const totalClicks  = pages.reduce((a, p) => a + (p.clicks || 0), 0);
   const totalCta     = pages.reduce((a, p) => a + (p.cta_clicks || 0), 0);
+  const offerOn      = settings.offer_active === '1';
   return HEAD('Direct Isca · Painel') + ADMIN_CSS + `</head><body>
   ${nav('p')}
   <div class="wrap">
+
+    <!-- SETTINGS CARD -->
+    <div class="card" style="padding:18px 20px;margin-bottom:20px">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:16px">
+        <div>
+          <div class="sh-title" style="font-size:16px">Galeria /prompts</div>
+          <div style="font-size:12px;color:var(--mu);margin-top:2px">Controle a oferta e o link dos botões</div>
+        </div>
+        <span style="display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:100px;font-size:11px;font-weight:700;background:${offerOn ? 'rgba(34,211,160,.12)' : 'rgba(244,63,94,.1)'};color:${offerOn ? 'var(--ok)' : 'var(--err)'};border:1px solid ${offerOn ? 'rgba(34,211,160,.25)' : 'rgba(244,63,94,.2)'}">
+          <span style="width:6px;height:6px;border-radius:50%;background:currentColor;display:inline-block"></span>
+          ${offerOn ? 'Oferta ativa' : 'Oferta desativada'}
+        </span>
+      </div>
+      <form method="POST" action="/admin/settings" style="display:flex;flex-direction:column;gap:14px">
+        <div class="field" style="margin:0">
+          <label>Link do botão "DESBLOQUEAR" e popup</label>
+          <input type="url" name="offer_cta_url" value="${settings.offer_cta_url}" placeholder="https://checkout.exemplo.com/...">
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+          <div style="display:flex;gap:8px">
+            <button type="submit" name="offer_active" value="1" class="btn ${offerOn ? 'btn-p' : 'btn-g'}" style="${offerOn ? 'opacity:1' : 'opacity:.7'}">
+              ${offerOn ? '✓ Oferta ativa' : 'Ativar oferta'}
+            </button>
+            <button type="submit" name="offer_active" value="0" class="btn ${!offerOn ? 'btn-rd' : 'btn-g'}" style="${!offerOn ? 'opacity:1' : 'opacity:.7'}">
+              ${!offerOn ? '✓ Desativada' : 'Desativar'}
+            </button>
+          </div>
+          <a href="/prompts" target="_blank" class="btn btn-tl btn-sm">Ver galeria ↗</a>
+        </div>
+      </form>
+    </div>
+
     <div class="stats">
       <div class="stat s-pu"><div class="stat-n">${pages.length}</div><div class="stat-l">Páginas criadas</div></div>
       <div class="stat s-tl"><div class="stat-n">${totalClicks}</div><div class="stat-l">Acessos totais</div></div>
@@ -833,7 +887,9 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 // ═══════════════════════════════════════════════════════════════════════════════
 // GALLERY PAGE — /prompts
 // ═══════════════════════════════════════════════════════════════════════════════
-function galleryPage(pages) {
+function galleryPage(pages, settings) {
+  const offerOn  = settings.offer_active === '1';
+  const ctaUrl   = settings.offer_cta_url || '#';
   const cards = pages.map(p => {
     const imgs = JSON.parse(p.images || '[]');
     const thumb = imgs[0] || '';
@@ -908,13 +964,13 @@ a{text-decoration:none;color:inherit}
 </head>
 <body>
 
-<div class="banner">
+${offerOn ? `<div class="banner">
   <div class="banner-txt">
     <strong>Mais de 120 Prompts Ultra Realistas</strong>
     Desbloqueie todos agora por R$19,90
   </div>
-  <button class="banner-btn" onclick="window.location.href='${GALLERY_CTA}'">DESBLOQUEAR</button>
-</div>
+  <button class="banner-btn" onclick="window.location.href='${ctaUrl}'">DESBLOQUEAR</button>
+</div>` : ''}
 
 <div class="inner">
   <div class="gal-header">
@@ -927,21 +983,20 @@ a{text-decoration:none;color:inherit}
     : `<div class="gal-grid">${cards}</div>`}
 </div>
 
-<!-- POPUP -->
+${offerOn ? `<!-- POPUP -->
 <div class="pop-ov" id="popOv">
   <div class="pop-box">
     <div class="pop-emoji">🔐</div>
     <div class="pop-title">Quer acessar os prompts secretos?</div>
     <p class="pop-sub">Mais de 120 prompts Ultra-Realistas para copiar e colar! de R$97,90 por apenas <strong>R$19,90</strong></p>
-    <button class="pop-btn" onclick="window.location.href='${GALLERY_CTA}'">QUERO ACESSAR POR R$19,90</button>
+    <button class="pop-btn" onclick="window.location.href='${ctaUrl}'">QUERO ACESSAR POR R$19,90</button>
     <span class="pop-close" id="popClose">Não, continuar navegando grátis</span>
   </div>
-</div>
+</div>` : ''}
 
 <script>
 (function(){
-  var ov = document.getElementById('popOv');
-  // Show popup after 4 seconds, only once per session
+  ${offerOn ? `var ov = document.getElementById('popOv');
   if(!sessionStorage.getItem('galPopSeen')){
     setTimeout(function(){
       ov.classList.add('show');
@@ -950,7 +1005,7 @@ a{text-decoration:none;color:inherit}
   }
   document.getElementById('popClose').addEventListener('click',function(){
     ov.classList.remove('show');
-  });
+  });` : ''}
 })();
 </script>
 </body>
